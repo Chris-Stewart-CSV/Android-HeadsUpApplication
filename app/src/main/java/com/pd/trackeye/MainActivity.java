@@ -1,111 +1,135 @@
 package com.pd.trackeye;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.net.Uri;
+import android.os.CountDownTimer;   // Import for timer - Not used YET!
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.ArrayAdapter;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
-
+import android.media.MediaPlayer;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
-
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    VideoView videoView;
-    EditText textView;
-
-    //For looking logs
-    ArrayAdapter adapter;
-    ArrayList<String> list = new ArrayList<>();
-
-    CameraSource cameraSource;
+    EditText textView;                  // shows eye tracking status / message to user
+    MediaPlayer mp;                     // declare media player (alarm)
+    MediaPlayer mpT;                    // declare media player (start ping)
+    CameraSource cameraSource;          // declare cameraSource
+    boolean startWasPressed = false;    // used to check if "start" is pressed
+    boolean closeWasPressed = false;    // used to check if "close" is pressed
+    long timeLeft;                      // used to track time left on countdown
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);                             // display main view
+        mp = MediaPlayer.create(this,R.raw.alarm);                  // create media player
+        mpT = MediaPlayer.create(this,R.raw.pingone);                  // create media player
+        final Button startButton = (Button) findViewById(R.id.startButton); // refers to start button
+        final Button closeButton = (Button) findViewById(R.id.closeButton); // refers to close button
+
+        // Listen for Start button to be pressed
+        startButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startWasPressed = true;                     // trigger startWasPressed
+                playPing();
+                textView.setVisibility(View.VISIBLE);       // show test once Started
+                startButton.setVisibility(View.INVISIBLE);  // hide Start button
+                closeButton.setVisibility(View.VISIBLE);    // show Close button
+            }
+        });
+
+        // Listen for close button to be pressed
+        closeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) { closeApplication(); }
+        });
+
+        // Request permission to use device camera and handle otherwise
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 1);
             Toast.makeText(this, "Grant Permission and restart app", Toast.LENGTH_SHORT).show();
         }
         else {
-            videoView = findViewById(R.id.videoView);
             textView = findViewById(R.id.textView);
-            adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list);
-            videoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.videoplayback));
-            videoView.start();
             createCameraSource();
         }
-    }
 
+    }//end onCreate
 
-    //This class will use google vision api to detect eyes
+    public void playPing() { mpT.start(); } //end playPing
+
     private class EyesTracker extends Tracker<Face> {
 
-        private final float THRESHOLD = 0.75f;
-
-        private EyesTracker() {
-
-        }
+        // Thresholds define the threshold of a face being detected or not
+        private final float THRESHOLD = 0.75f; // original value = 0.75f;
+        private final float TURNING_THRESHOLD = .75f;
+        private EyesTracker() { /***************/ }//end EyesTracker
 
         @Override
         public void onUpdate(Detector.Detections<Face> detections, Face face) {
-            if (face.getIsLeftEyeOpenProbability() > THRESHOLD || face.getIsRightEyeOpenProbability() > THRESHOLD) {
-                Log.i(TAG, "onUpdate: Eyes Detected");
-                showStatus("Eyes Detected and open, so video continues");
-                if (!videoView.isPlaying())
-                    videoView.start();
+            if(startWasPressed){
 
-            }
-            else {
-                if (videoView.isPlaying())
-                    videoView.pause();
+                // If eyes are determined to be open then update text
+                if (face.getIsLeftEyeOpenProbability() > THRESHOLD || face.getIsRightEyeOpenProbability() > THRESHOLD) {
+                    showStatus("Eyes Detected and open.");
+                    //pauseAlarm();
 
-                showStatus("Eyes Detected and closed, so video paused");
-            }
+                    // If face turned too far then notify
+                    if(face.getEulerZ() > TURNING_THRESHOLD){
+                        showStatus("Face turned away, Play Alert!");
+                        playAlarm();
+                    }
 
-        }
+                }else {
+                    showStatus("Eyes Detected and closed, Play Alert!");
+                    playAlarm();
+                }
+            }//end if startWasPressed
+        }//end onUpdate
 
         @Override
         public void onMissing(Detector.Detections<Face> detections) {
             super.onMissing(detections);
             showStatus("Face Not Detected yet!");
-        }
+            /** Possibly play alarm here? **/
+        }//end onMissing
 
         @Override
-        public void onDone() {
-            super.onDone();
-        }
-    }
+        public void onDone() { super.onDone(); } //end onDone
+
+        public void playAlarm() { mp.start(); } //end playAlarm
+
+        /** In progress - Causes no sound to play at all **/
+        public void pauseAlarm() { mp.pause(); } //end pauseAlarm
+
+    }//end EyeTracker class
 
     private class FaceTrackerFactory implements MultiProcessor.Factory<Face> {
 
-        private FaceTrackerFactory() {
-
-        }
-
+        // Uncertain if actually used
+        private FaceTrackerFactory() { /***************/ }
         @Override
-        public Tracker<Face> create(Face face) {
-            return new EyesTracker();
-        }
-    }
+        public Tracker<Face> create(Face face) { return new EyesTracker(); }//end create
+
+    }//end class FaceTrackerFactory
+
+    private void closeApplication(){ // Linked to button press - Does exactly what you think it does
+        finish();
+        moveTaskToBack(true);
+    }//end closeApplication
 
     public void createCameraSource() {
         FaceDetector detector = new FaceDetector.Builder(this)
@@ -137,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }//end createCameraSource
 
     @Override
     protected void onResume() {
@@ -158,35 +182,35 @@ public class MainActivity extends AppCompatActivity {
             }
             catch (IOException e) {
                 e.printStackTrace();
-            }
-        }
-    }
+            }//end try
+        }//end if cameraSource
+    }//end onResume
 
+    // On application pause temporarily give up use of camera
     @Override
-    protected void onPause() {
+    protected void onPause() { // On application pause (If app is minimized)
         super.onPause();
         if (cameraSource!=null) {
             cameraSource.stop();
         }
-        if (videoView.isPlaying()) {
-            videoView.pause();
-        }
-    }
-
-    public void showStatus(final String message) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                textView.setText(message);
-            }
-        });
-    }
+    }//end onPause
 
     @Override
-    protected void onDestroy() {
+    protected void onDestroy() { // Cleans up when app closes
         super.onDestroy();
+        mp.stop();
+        mp.release();
         if (cameraSource!=null) {
             cameraSource.release();
         }
-    }
-}
+    }//end onDestroy
+
+    // Show status of facial view
+    public void showStatus(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() { textView.setText(message); } // Used to update text notification
+        });
+    }//end showStatus
+
+}//end class MainActivity
