@@ -14,7 +14,7 @@ import android.media.MediaPlayer;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.MultiProcessor;
-import com.google.android.gms.vision.Tracker;//
+import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import java.io.IOException;
