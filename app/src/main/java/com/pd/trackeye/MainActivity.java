@@ -17,7 +17,7 @@ import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
-import java.io.IOException;//
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
