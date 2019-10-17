@@ -22,13 +22,24 @@
 </p>
 
 ## User Interface
-![](https://i.imgur.com/yReGjWb.png)
+<p align="left">
+	<img src="https://i.imgur.com/yReGjWb.png" width="299" height ="260"/>
+</p>
+<p align="left">
 
 ## Minimum Requirements
-![](https://i.imgur.com/qUFMHfh.png)
+<p align="left">
+	<img src="https://i.imgur.com/qUFMHfh.png" width="464" height="217"/>
+</p>
+<p align="left">
 
 ## System Architecture
-![](https://i.imgur.com/nIkpTw5.png)
+<p align="left">
+	<img src="https://i.imgur.com/nIkpTw5.png" width="446" height="185"/>
+</p>
+<p align="left">
+	
 
-## Use Cases
-![](https://i.imgur.com/Zx6YTz9.png)
+
+
+
