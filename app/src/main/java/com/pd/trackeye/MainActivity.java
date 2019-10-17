@@ -24,18 +24,17 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     EditText textView;                  // shows eye tracking status / message to user
     MediaPlayer mp;                     // declare media player (alarm)
-    MediaPlayer mpT;                    // declare media player (start ping)
+    MediaPlayer mpT;                     // declare media player (pingone)
     CameraSource cameraSource;          // declare cameraSource
     boolean startWasPressed = false;    // used to check if "start" is pressed
-    boolean closeWasPressed = false;    // used to check if "close" is pressed
     long timeLeft;                      // used to track time left on countdown
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);                             // display main view
-        mp = MediaPlayer.create(this,R.raw.alarm);                  // create media player
-        mpT = MediaPlayer.create(this,R.raw.pingone);                  // create media player
+        setContentView(R.layout.activity_main);                     // display main view
+        mp = MediaPlayer.create(this,R.raw.alarm);          // create media player
+        mpT = MediaPlayer.create(this,R.raw.pingone);       // create media player
         final Button startButton = findViewById(R.id.startButton); // refers to start button
         final Button closeButton = findViewById(R.id.closeButton); // refers to close button
 
@@ -69,7 +68,18 @@ public class MainActivity extends AppCompatActivity {
 
     }//end onCreate
 
-    public void playPing() { mpT.start(); } //end playPing
+    public void playPing() {
+        mpT.start();
+    } //end playPing
+
+    public void playAlarm() {
+        mp.start();
+    } //end playAlarm
+
+    /** In progress - Causes no sound to play at all **/
+    public void pauseAlarm() {
+        mp.stop();
+    } //end pauseAlarm
 
     private class EyesTracker extends Tracker<Face> {
 
@@ -114,11 +124,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onDone() { super.onDone(); } //end onDone
-
-        public void playAlarm() { mp.start(); } //end playAlarm
-
-        /** In progress - Causes no sound to play at all **/
-        public void pauseAlarm() { mp.pause(); } //end pauseAlarm
 
     }//end EyeTracker class
 
