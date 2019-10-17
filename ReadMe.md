@@ -21,7 +21,7 @@
 	- To access main code once downloaded follow path: app/java/com.pd.trackeye/MainActivity.java
 </p>
 
-## Motivation for PRoject
+## Motivation for Project
 <p align="left">
 Heads Up is my senior project (in progress) that aims to lessen the amount of distraction related vehicle accidents. Assuming the phone is mounted in a location where it can see the driver's face, Heads Up will notify the driver with an audible alert if they are not paying attention. 
 	
