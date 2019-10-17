@@ -3,8 +3,11 @@
 
 <p align="center">
 	<img src="https://i.imgur.com/F7gKEBK.png" width="249" height ="210"/>
-	A driver awareness application utilizing eye tracking and facial recognition.
-	Made Using Google Vision API, Android Studio, and Java language.
+</p>
+
+<p align="center">
+A driver awareness application utilizing eye tracking and facial recognition.
+Made Using Google Vision API, Android Studio, and Java language.
 </p>
 
 <p align="left">
@@ -12,7 +15,6 @@
 
 * Once downloaded, to access main code follow path: app/java/com.pd.trackeye/MainActivity.java
 </p>
-
 
 ## User Interface
 ![](https://i.imgur.com/yReGjWb.png)
