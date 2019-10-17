@@ -36,8 +36,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);                             // display main view
         mp = MediaPlayer.create(this,R.raw.alarm);                  // create media player
         mpT = MediaPlayer.create(this,R.raw.pingone);                  // create media player
-        final Button startButton = (Button) findViewById(R.id.startButton); // refers to start button
-        final Button closeButton = (Button) findViewById(R.id.closeButton); // refers to close button
+        final Button startButton = findViewById(R.id.startButton); // refers to start button
+        final Button closeButton = findViewById(R.id.closeButton); // refers to close button
 
         // Listen for Start button to be pressed
         startButton.setOnClickListener(new View.OnClickListener() {
@@ -75,7 +75,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Thresholds define the threshold of a face being detected or not
         private final float THRESHOLD = 0.75f; // original value = 0.75f;
-        private final float TURNING_THRESHOLD = .75f;
+        private final float TURNING_RIGHT_THRESHOLD = -45f;
+        private final float TURNING_LEFT_THRESHOLD = 45f;
         private EyesTracker() { /***************/ }//end EyesTracker
 
         @Override
@@ -84,17 +85,21 @@ public class MainActivity extends AppCompatActivity {
 
                 // If eyes are determined to be open then update text
                 if (face.getIsLeftEyeOpenProbability() > THRESHOLD || face.getIsRightEyeOpenProbability() > THRESHOLD) {
-                    showStatus("Eyes Detected and open.");
+                    showStatus("Eyes Open.");
                     //pauseAlarm();
-
-                    // If face turned too far then notify
-                    if(face.getEulerZ() > TURNING_THRESHOLD){
-                        showStatus("Face turned away, Play Alert!");
-                        playAlarm();
-                    }
-
-                }else {
-                    showStatus("Eyes Detected and closed, Play Alert!");
+                }
+                if(face.getIsLeftEyeOpenProbability() < THRESHOLD || face.getIsRightEyeOpenProbability() < THRESHOLD){
+                    showStatus("Eyes Closed, Play Alert!");
+                    playAlarm();
+                }
+                if(face.getEulerY() < TURNING_RIGHT_THRESHOLD){
+                    //showStatus(Float.toString(face.getEulerY()));
+                    showStatus("Turned Right, Play Alert!");
+                    playAlarm();
+                }
+                if(face.getEulerY() > TURNING_LEFT_THRESHOLD){
+                    //showStatus(Float.toString(face.getEulerY()));
+                    showStatus("Turned Left, Play Alert!");
                     playAlarm();
                 }
             }//end if startWasPressed
@@ -135,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
         FaceDetector detector = new FaceDetector.Builder(this)
                 .setTrackingEnabled(true)
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
-                .setMode(FaceDetector.FAST_MODE)
+                .setMode(FaceDetector.ACCURATE_MODE) // original FAST_MODE
                 .build();
         detector.setProcessor(new MultiProcessor.Builder(new FaceTrackerFactory()).build());
 
