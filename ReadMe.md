@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-	Made Using Google Vision API, Android Studio, and Java language.
+	Made Using Google Vision API, Android Studio, and Java.
 </p>
 
 <p align="center">
