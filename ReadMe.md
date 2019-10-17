@@ -16,6 +16,9 @@
 
 <p align="left">
 	- To access main code on GitHub follow path: app/src/main/java/cpm/pd/trackeye/MainActivity.java
+</p>
+
+<p align="left">
 	- To access main code once downloaded follow path: app/java/com.pd.trackeye/MainActivity.java
 </p>
 
