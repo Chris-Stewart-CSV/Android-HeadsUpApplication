@@ -11,9 +11,8 @@ Made Using Google Vision API, Android Studio, and Java language.
 </p>
 
 <p align="left">
-* To access main code follow path: app/src/main/java/cpm/pd/trackeye/MainActivity.java
-
-* Once downloaded, to access main code follow path: app/java/com.pd.trackeye/MainActivity.java
+- To access main code on GitHub follow path: app/src/main/java/cpm/pd/trackeye/MainActivity.java
+- To access main code once downloaded follow path: app/java/com.pd.trackeye/MainActivity.java
 </p>
 
 ## User Interface
