@@ -2,7 +2,7 @@
 ![API](https://img.shields.io/badge/API-15%2B-brightgreen.svg?style=flat)
 
 <p align="center">
-	<img src="https://i.imgur.com/CSnPWTq.png" width="210" height ="249"/>
+	<img src="https://i.imgur.com/CSnPWTq.png" width="249" height ="210"/>
 </p>
 <p align="center">
 A driver awareness application utilizing eye tracking and facial recognition.
