@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-	<img src="https://i.imgur.com/u2aaANV.png" width="348" height ="378"/>
+	<img src="https://i.imgur.com/u2aaANV.png" width="232" height ="252"/>
 </p>
 
 ## Motivation for Project
