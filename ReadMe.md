@@ -27,7 +27,7 @@ Presently Heads Up will notify a driver if they are sleepy, eyes are closed, fac
 
 ## User Interface
 <p align="left">
-	<img src="https://i.imgur.com/yReGjWb.png" width="299" height ="260"/>
+	<img src="https://i.imgur.com/JGEZbQP.png" width="299" height ="260"/>
 </p>
 <p align="left">
 
