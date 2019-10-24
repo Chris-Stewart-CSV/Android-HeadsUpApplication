@@ -14,18 +14,20 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/welcome_screen" />
+        app:srcCompat="@drawable/welcome" />
 
     <EditText
         android:id="@+id/textView"
         android:layout_width="358dp"
-        android:layout_height="66dp"
+        android:layout_height="70dp"
         android:layout_marginStart="24dp"
         android:layout_marginLeft="24dp"
         android:layout_marginTop="372dp"
         android:clickable="false"
         android:text="@string/face_not_found"
-        android:textColor="@android:color/holo_orange_dark"
+        android:textColor="#338EFF"
+        android:textColorLink="#FF4081"
+        android:textCursorDrawable="@color/cast_expanded_controller_text_color"
         android:textSize="20sp"
         android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"

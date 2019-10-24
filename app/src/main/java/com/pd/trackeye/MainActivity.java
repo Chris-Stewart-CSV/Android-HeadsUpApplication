@@ -2,10 +2,12 @@ package com.pd.trackeye;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.os.CountDownTimer;   // Import for timer - Not used YET!
+import android.hardware.Camera;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,35 +21,40 @@ import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import java.io.IOException;
 
+/* TODO:
+    - Implement timer to stop fast reacting alarm [x]
+    - Fix pauseAlarm method. Currently causes all audio to stop [ ]
+    - Generic Performance improvements [ ]
+    - Improve formatting, readability, etc. [ ]
+*/
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    EditText textView;                  // shows eye tracking status / message to user
-    MediaPlayer mp;                     // declare media player (alarm)
-    MediaPlayer mpT;                    // declare media player (start ping)
-    CameraSource cameraSource;          // declare cameraSource
-    boolean startWasPressed = false;    // used to check if "start" is pressed
-    boolean closeWasPressed = false;    // used to check if "close" is pressed
-    long timeLeft;                      // used to track time left on countdown
+    EditText textView;                  // Shows eye tracking status / message to user
+    MediaPlayer mp;                     // Declare media player (alarm)
+    MediaPlayer mpT;                    // Declare media player (pingone)
+    CameraSource cameraSource;          // Declare cameraSource
+    boolean startWasPressed = false;    // Used to check if "start" is pressed
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);                             // display main view
-        mp = MediaPlayer.create(this,R.raw.alarm);                  // create media player
-        mpT = MediaPlayer.create(this,R.raw.pingone);                  // create media player
-        final Button startButton = findViewById(R.id.startButton); // refers to start button
-        final Button closeButton = findViewById(R.id.closeButton); // refers to close button
+        setContentView(R.layout.activity_main);                     // Display main view
+        mp = MediaPlayer.create(this,R.raw.alarm);          // Create media player
+        mpT = MediaPlayer.create(this,R.raw.pingone);       // Create media player
+        final Button startButton = findViewById(R.id.startButton); // Refers to start button
+        final Button closeButton = findViewById(R.id.closeButton); // Refers to close button
 
         // Listen for Start button to be pressed
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startWasPressed = true;                     // trigger startWasPressed
-                playPing();
-                textView.setVisibility(View.VISIBLE);       // show test once Started
-                startButton.setVisibility(View.INVISIBLE);  // hide Start button
-                closeButton.setVisibility(View.VISIBLE);    // show Close button
+                startWasPressed = true;                     // Trigger startWasPressed
+                playPing();                                 // Play ping sound
+                textView.setVisibility(View.VISIBLE);       // Show test once Started
+                startButton.setVisibility(View.INVISIBLE);  // Hide Start button
+                closeButton.setVisibility(View.VISIBLE);    // Show Close button
             }
         });
 
@@ -69,14 +76,30 @@ public class MainActivity extends AppCompatActivity {
 
     }//end onCreate
 
-    public void playPing() { mpT.start(); } //end playPing
+    // Used to play ping on button press
+    public void playPing() {
+        mpT.start();
+    } //end playPing
+
+    // In progress - Causes no sound to play at all
+    // Used to pause alarm when driver pays attention again
+    public void playAlarm() {
+        mp.start();
+    } //end playAlarm
+
+    /** In progress - Causes no sound to play at all **/
+    public void pauseAlarm() {
+        mp.stop();
+    } //end pauseAlarm
 
     private class EyesTracker extends Tracker<Face> {
 
         // Thresholds define the threshold of a face being detected or not
-        private final float THRESHOLD = 0.75f; // original value = 0.75f;
+        private final float EYES_THRESHOLD = 0.75f; // original value = 0.75f;
         private final float TURNING_RIGHT_THRESHOLD = -45f;
         private final float TURNING_LEFT_THRESHOLD = 45f;
+
+
         private EyesTracker() { /***************/ }//end EyesTracker
 
         @Override
@@ -84,24 +107,30 @@ public class MainActivity extends AppCompatActivity {
             if(startWasPressed){
 
                 // If eyes are determined to be open then update text
-                if (face.getIsLeftEyeOpenProbability() > THRESHOLD || face.getIsRightEyeOpenProbability() > THRESHOLD) {
-                    showStatus("Eyes Open.");
-                    //pauseAlarm();
-                }
-                if(face.getIsLeftEyeOpenProbability() < THRESHOLD || face.getIsRightEyeOpenProbability() < THRESHOLD){
-                    showStatus("Eyes Closed, Play Alert!");
-                    playAlarm();
-                }
-                if(face.getEulerY() < TURNING_RIGHT_THRESHOLD){
-                    //showStatus(Float.toString(face.getEulerY()));
-                    showStatus("Turned Right, Play Alert!");
-                    playAlarm();
-                }
-                if(face.getEulerY() > TURNING_LEFT_THRESHOLD){
-                    //showStatus(Float.toString(face.getEulerY()));
-                    showStatus("Turned Left, Play Alert!");
-                    playAlarm();
-                }
+                    if (face.getIsLeftEyeOpenProbability() > EYES_THRESHOLD || face.getIsRightEyeOpenProbability() > EYES_THRESHOLD) {
+                        showStatus("Eyes Open.");
+
+                    }else{
+
+                        // Eyes Closed
+                        if (face.getIsLeftEyeOpenProbability() < EYES_THRESHOLD || face.getIsRightEyeOpenProbability() < EYES_THRESHOLD){
+                            playAlarm();
+                            showStatus("Eyes Closed.");
+                        }//end if
+
+                        // Head Turned Right
+                        if (face.getEulerY() < TURNING_RIGHT_THRESHOLD){
+                            playAlarm();
+                            showStatus("Turned Right.");
+                        }//end if
+
+                        // Head Turned Left
+                        if(face.getEulerY() > TURNING_LEFT_THRESHOLD){
+                            playAlarm();
+                            showStatus("Turned Left.");
+                        }//end if
+
+                    }//end else
             }//end if startWasPressed
         }//end onUpdate
 
@@ -109,26 +138,18 @@ public class MainActivity extends AppCompatActivity {
         public void onMissing(Detector.Detections<Face> detections) {
             super.onMissing(detections);
             showStatus("Face Not Detected yet!");
-            /** Possibly play alarm here? **/
+            // Possibly play alarm here - Still to be determined
         }//end onMissing
 
         @Override
         public void onDone() { super.onDone(); } //end onDone
 
-        public void playAlarm() { mp.start(); } //end playAlarm
-
-        /** In progress - Causes no sound to play at all **/
-        public void pauseAlarm() { mp.pause(); } //end pauseAlarm
-
     }//end EyeTracker class
 
     private class FaceTrackerFactory implements MultiProcessor.Factory<Face> {
-
-        // Uncertain if actually used
         private FaceTrackerFactory() { /***************/ }
         @Override
         public Tracker<Face> create(Face face) { return new EyesTracker(); }//end create
-
     }//end class FaceTrackerFactory
 
     private void closeApplication(){ // Linked to button press - Does exactly what you think it does
@@ -140,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         FaceDetector detector = new FaceDetector.Builder(this)
                 .setTrackingEnabled(true)
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
-                .setMode(FaceDetector.ACCURATE_MODE) // original FAST_MODE
+                .setMode(FaceDetector.ACCURATE_MODE) // Original FAST_MODE -- ACCURATE_MODE enables getEulerY method
                 .build();
         detector.setProcessor(new MultiProcessor.Builder(new FaceTrackerFactory()).build());
 
@@ -154,11 +175,11 @@ public class MainActivity extends AppCompatActivity {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+                //    here to request the missing permissions, and then overriding
+                //    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                           int[] grantResults)
+                //    to handle the case where the user grants the permission. See the documentation
+                //    for ActivityCompat#requestPermissions for more details.
                 return;
             }
             cameraSource.start();
@@ -171,16 +192,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (cameraSource != null) {
+        if (cameraSource != null) { // Checks if camera is being used or not - If not used then Heads Up will use camera
             try {
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     // TODO: Consider calling
                     //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
+                    //    here to request the missing permissions, and then overriding
+                    //    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                           int[] grantResults)
+                    //    to handle the case where the user grants the permission. See the documentation
+                    //    for ActivityCompat#requestPermissions for more details.
                     return;
                 }
                 cameraSource.start();
