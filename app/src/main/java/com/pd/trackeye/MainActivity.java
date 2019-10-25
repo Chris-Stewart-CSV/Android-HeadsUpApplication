@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         public void onUpdate(Detector.Detections<Face> detections, Face face) {
             if(startWasPressed){
 
-                // If eyes are determined to be open then update text
+                // If eyes are OPEN then update text - Possibly pause alarm
                     if (face.getIsLeftEyeOpenProbability() > EYES_THRESHOLD || face.getIsRightEyeOpenProbability() > EYES_THRESHOLD) {
                         showStatus("Eyes Open.");
 
@@ -152,7 +152,9 @@ public class MainActivity extends AppCompatActivity {
         public Tracker<Face> create(Face face) { return new EyesTracker(); }//end create
     }//end class FaceTrackerFactory
 
-    private void closeApplication(){ // Linked to button press - Does exactly what you think it does
+    // Linked to button press - Does exactly what you think it does
+    private void closeApplication(){
+        playPing();
         finish();
         moveTaskToBack(true);
     }//end closeApplication
