@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     EditText textView;                  // Shows eye tracking status / message to user
-    MediaPlayer mp;                     // Declare media player (alarm)
+    MediaPlayer mp;                     // Declare media player (orb)
     MediaPlayer mpT;                    // Declare media player (pingone)
     CameraSource cameraSource;          // Declare cameraSource
     boolean startWasPressed = false;    // Used to check if "start" is pressed
@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);                     // Display main view
-        mp = MediaPlayer.create(this,R.raw.alarm);                  // Create media player
+        mp = MediaPlayer.create(this,R.raw.orb);                    // Create media player
         mpT = MediaPlayer.create(this,R.raw.pingone);               // Create media player
         final Button startButton = findViewById(R.id.startButton);  // Refers to start button
         final Button closeButton = findViewById(R.id.closeButton);  // Refers to close button
