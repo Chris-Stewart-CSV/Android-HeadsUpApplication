@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/welcome_screen" />
+        app:srcCompat="@drawable/welcome" />
 
     <EditText
         android:id="@+id/textView"

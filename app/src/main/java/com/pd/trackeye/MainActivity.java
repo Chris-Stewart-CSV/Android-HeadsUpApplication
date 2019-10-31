@@ -31,13 +31,12 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     EditText textView;                  // Shows eye tracking status / message to user
-    MediaPlayer mp;                     // Declare media player (orb)
-    MediaPlayer mpT;                    // Declare media player (pingone)
+    MediaPlayer mp;                     // Declare media player (alarm: orb.mp3)
+    MediaPlayer mpT;                    // Declare media player (button_ping: pingone.wav)
     CameraSource cameraSource;          // Declare cameraSource
     boolean startWasPressed = false;    // Used to check if "start" is pressed
     TimeUnit time = TimeUnit.SECONDS;
     long timeToSleep = 2L;
-    boolean timeUp=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
