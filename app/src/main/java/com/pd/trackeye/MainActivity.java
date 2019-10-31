@@ -18,6 +18,7 @@ import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /* TODO:
     - Implement timer to stop fast reacting alarm [x]
@@ -34,7 +35,9 @@ public class MainActivity extends AppCompatActivity {
     MediaPlayer mpT;                    // Declare media player (pingone)
     CameraSource cameraSource;          // Declare cameraSource
     boolean startWasPressed = false;    // Used to check if "start" is pressed
-    long timeLeft;                      // Used to track time left on countdown
+    TimeUnit time = TimeUnit.SECONDS;
+    long timeToSleep = 2L;
+    boolean timeUp=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,11 +88,32 @@ public class MainActivity extends AppCompatActivity {
         mp.start();
     } //end playAlarm
 
-    // In progress - Causes no sound to play at all
     // Used to pause alarm when driver pays attention again
     public void pauseAlarm() {
-        mp.stop();
+        mp.pause();
     } //end pauseAlarm
+
+    CountDownTimer timer = new CountDownTimer(1000, 1000)
+    {
+        public void onTick(long millisUntilFinished) {
+            int progress= (int)(millisUntilFinished / 1000);
+            showStatus(progress+"seconds");
+
+            if (progress == 0) {
+                try {time.sleep(timeToSleep);}
+                catch (InterruptedException e){cancel();}
+                playAlarm();
+                showStatus("Eyes closed, Play Alert!");
+            }
+        }//end onTick
+
+        @Override
+        public void onFinish() {
+            //playAlarm();
+            //showStatus("Eyes closed, Play Alert!");
+        }//end onFinish
+        
+    };//end CountDownTimer
 
     private class EyesTracker extends Tracker<Face> {
 
@@ -97,36 +121,89 @@ public class MainActivity extends AppCompatActivity {
         private final float EYES_THRESHOLD = 0.75f; // Original value = 0.75f;
         private final float TURNING_RIGHT_THRESHOLD = -45f;
         private final float TURNING_LEFT_THRESHOLD = 45f;
-        private EyesTracker() { /***************/ }//end EyesTracker
+        private EyesTracker() { /******/ }//end EyesTracker
+
+        //Update Variable Initialization
+        long last_time = System.nanoTime();
+        boolean isAttentive = true;
+        float inattentiveTime = 0.0f;
+        final float INATTENTIVE_THRESHOLD = 2000;   // 2 seconds for timer
 
         @Override
         public void onUpdate(Detector.Detections<Face> detections, Face face) {
+            long time = System.nanoTime();
+            float delta_time = (time - last_time) / 1000000;
+            last_time = time;
+
+            System.out.println("delta time: " + delta_time);
+
+            if (isAttentive) {
+                //pauseAlarm(); // Still causes no alarm sound
+                inattentiveTime = 0;
+            }
+            else {
+                showStatus("Not attentive for: " + inattentiveTime);
+                inattentiveTime += delta_time;
+            }
+
+            if (inattentiveTime > INATTENTIVE_THRESHOLD) {
+                playAlarm();
+            }
+
             if(startWasPressed){
 
-                // If eyes are determined to be open then update text
-                if (face.getIsLeftEyeOpenProbability() > EYES_THRESHOLD || face.getIsRightEyeOpenProbability() > EYES_THRESHOLD) {
-                    showStatus("Eyes Open.");
-                    //pauseAlarm();
+                boolean EyesClosed = EyesClosed(detections,face,EYES_THRESHOLD);
+                boolean HeadTurnedLeft = HeadTurnedLeft(detections,face,TURNING_LEFT_THRESHOLD);
+                boolean HeadTurnedRight = HeadTurnedRight(detections,face,TURNING_RIGHT_THRESHOLD);
+
+                // If eyes are determined to be OPEN then update text
+                if (!EyesClosed || !HeadTurnedLeft || !HeadTurnedRight){
+                    isAttentive = true;
                 }
                 // If eyes are CLOSED then update text and play alarm
-                if(face.getIsLeftEyeOpenProbability() < EYES_THRESHOLD || face.getIsRightEyeOpenProbability() < EYES_THRESHOLD){
-                    showStatus("Eyes Closed, Play Alert!");
-                    playAlarm();
+                if (EyesClosed){
+                    isAttentive = false;
                 }
                 // If head is turned too far RIGHT then update text and play alarm
-                if(face.getEulerY() < TURNING_RIGHT_THRESHOLD){
-                    //showStatus(Float.toString(face.getEulerY())); // Used to show returned value of getEulerY
-                    showStatus("Turned Right, Play Alert!");
-                    playAlarm();
+                if(HeadTurnedRight){
+                    isAttentive = false;
                 }
                 // If head is turned too far LEFT then update text and play alarm
-                if(face.getEulerY() > TURNING_LEFT_THRESHOLD){
-                    //showStatus(Float.toString(face.getEulerY())); // Used to show returned value of getEulerY
-                    showStatus("Turned Left, Play Alert!");
-                    playAlarm();
+                if(HeadTurnedLeft){
+                    isAttentive = false;
                 }
             }//end if startWasPressed
         }//end onUpdate
+
+        public boolean EyesClosed(Detector.Detections<Face> detections, Face face, float threshold){
+            boolean closed;
+            if (face.getIsLeftEyeOpenProbability()>EYES_THRESHOLD && face.getIsRightEyeOpenProbability()> EYES_THRESHOLD )
+                closed = false;
+            else {
+                closed = true;
+            }
+            return closed;
+        }//end EyesClosed
+
+        public boolean HeadTurnedLeft(Detector.Detections<Face> detections, Face face, float threshold) {
+            boolean turned;
+            if (face.getEulerY() > threshold)
+                turned = true;
+            else {
+                turned = false;
+            }
+            return turned;
+        }//end HeadTurnedLeft
+
+        public boolean HeadTurnedRight(Detector.Detections<Face> detections, Face face, float threshold) {
+            boolean turned;
+            if (face.getEulerY() < threshold)
+                turned = true;
+            else {
+                turned = false;
+            }
+            return turned;
+        }//end HeadTurnedRight
 
         @Override
         public void onMissing(Detector.Detections<Face> detections) {
