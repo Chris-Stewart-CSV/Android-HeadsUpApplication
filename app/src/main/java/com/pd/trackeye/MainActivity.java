@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /* TODO:
-    - Implement timer to stop fast reacting alarm [x]
-    - Fix pauseAlarm method. Currently causes all audio to stop [ ]
     - Generic Performance improvements [ ]
     - Improve formatting, readability, etc. [ ]
 */
@@ -91,28 +89,6 @@ public class MainActivity extends AppCompatActivity {
     public void pauseAlarm() {
         mp.pause();
     } //end pauseAlarm
-
-    CountDownTimer timer = new CountDownTimer(1000, 1000)
-    {
-        public void onTick(long millisUntilFinished) {
-            int progress= (int)(millisUntilFinished / 1000);
-            showStatus(progress+"seconds");
-
-            if (progress == 0) {
-                try {time.sleep(timeToSleep);}
-                catch (InterruptedException e){cancel();}
-                playAlarm();
-                showStatus("Eyes closed, Play Alert!");
-            }
-        }//end onTick
-
-        @Override
-        public void onFinish() {
-            //playAlarm();
-            //showStatus("Eyes closed, Play Alert!");
-        }//end onFinish
-        
-    };//end CountDownTimer
 
     private class EyesTracker extends Tracker<Face> {
 
