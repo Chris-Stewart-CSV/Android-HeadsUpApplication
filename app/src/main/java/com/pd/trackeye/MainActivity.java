@@ -2,6 +2,7 @@ package com.pd.trackeye;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.os.CountDownTimer;   //import for timer - Not used YET!
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,9 +18,12 @@ import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /* TODO:
-    - Generic performance improvements [ ]
+    - Implement timer to stop fast reacting alarm [x]
+    - Fix pauseAlarm method. Currently causes all audio to stop [ ]
+    - Generic Performance improvements [ ]
     - Improve formatting, readability, etc. [ ]
 */
 
@@ -31,13 +35,15 @@ public class MainActivity extends AppCompatActivity {
     MediaPlayer mpT;                    // Declare media player (button_ping: pingone.wav)
     CameraSource cameraSource;          // Declare cameraSource
     boolean startWasPressed = false;    // Used to check if "start" is pressed
+    TimeUnit time = TimeUnit.SECONDS;
+    long timeToSleep = 2L;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);                     // Display main view
-        mp = MediaPlayer.create(this,R.raw.orb);            // Create media player
-        mpT = MediaPlayer.create(this,R.raw.pingone);       // Create media player
+        mp = MediaPlayer.create(this,R.raw.orb);                    // Create media player
+        mpT = MediaPlayer.create(this,R.raw.pingone);               // Create media player
         final Button startButton = findViewById(R.id.startButton);  // Refers to start button
         final Button closeButton = findViewById(R.id.closeButton);  // Refers to close button
 
@@ -70,29 +76,51 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }//end onCreate
-
+    
     // Used to play ping on button press
     public void playPing() {
         mpT.start();
     } //end playPing
-
+    
     // Used to play alarm when driver not paying attention
     public void playAlarm() {
         mp.start();
     } //end playAlarm
 
-    // Currently not used
     // Used to pause alarm when driver pays attention again
     public void pauseAlarm() {
         mp.pause();
     } //end pauseAlarm
 
+    CountDownTimer timer = new CountDownTimer(1000, 1000)
+    {
+        public void onTick(long millisUntilFinished) {
+            int progress= (int)(millisUntilFinished / 1000);
+            showStatus(progress+"seconds");
+
+            if (progress == 0) {
+                try {time.sleep(timeToSleep);}
+                catch (InterruptedException e){cancel();}
+                playAlarm();
+                showStatus("Eyes closed, Play Alert!");
+            }
+        }//end onTick
+
+        @Override
+        public void onFinish() {
+            //playAlarm();
+            //showStatus("Eyes closed, Play Alert!");
+        }//end onFinish
+        
+    };//end CountDownTimer
+
     private class EyesTracker extends Tracker<Face> {
 
-        // Thresholds define the threshold of a face being detected
+        // Thresholds define the threshold of a face being detected 
         private final float EYES_THRESHOLD = 0.75f; // Original value = 0.75f;
-
-        private EyesTracker() { /**/ }//end EyesTracker
+        private final float TURNING_RIGHT_THRESHOLD = -45f;
+        private final float TURNING_LEFT_THRESHOLD = 45f;
+        private EyesTracker() { /******/ }//end EyesTracker
 
         //Update Variable Initialization
         long last_time = System.nanoTime();
@@ -103,11 +131,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onUpdate(Detector.Detections<Face> detections, Face face) {
             long time = System.nanoTime();
-            long nanosPerSecond = 1000000;
-            float delta_time = (time - last_time) / nanosPerSecond;
+            float delta_time = (time - last_time) / 1000000;
             last_time = time;
 
+            System.out.println("delta time: " + delta_time);
+
             if (isAttentive) {
+                //pauseAlarm(); // Still causes no alarm sound
                 inattentiveTime = 0;
             }
             else {
@@ -122,10 +152,8 @@ public class MainActivity extends AppCompatActivity {
             if(startWasPressed){
 
                 boolean EyesClosed = EyesClosed(detections,face,EYES_THRESHOLD);
-                float TURNING_LEFT_THRESHOLD = 35f;
-                boolean HeadTurnedLeft = HeadTurnedLeft(detections,face, TURNING_LEFT_THRESHOLD);
-                float TURNING_RIGHT_THRESHOLD = -35f;
-                boolean HeadTurnedRight = HeadTurnedRight(detections,face, TURNING_RIGHT_THRESHOLD);
+                boolean HeadTurnedLeft = HeadTurnedLeft(detections,face,TURNING_LEFT_THRESHOLD);
+                boolean HeadTurnedRight = HeadTurnedRight(detections,face,TURNING_RIGHT_THRESHOLD);
 
                 // If eyes are determined to be OPEN then update text
                 if (!EyesClosed || !HeadTurnedLeft || !HeadTurnedRight){
@@ -146,36 +174,41 @@ public class MainActivity extends AppCompatActivity {
             }//end if startWasPressed
         }//end onUpdate
 
-        // Boolean to detect if Eyes are open/closed based on EYES_THRESHOLD
-        boolean EyesClosed(Detector.Detections<Face> detections, Face face, float threshold){
+        public boolean EyesClosed(Detector.Detections<Face> detections, Face face, float threshold){
             boolean closed;
-            closed = !(face.getIsLeftEyeOpenProbability() > EYES_THRESHOLD) || !(face.getIsRightEyeOpenProbability() > EYES_THRESHOLD);
+            if (face.getIsLeftEyeOpenProbability()>EYES_THRESHOLD && face.getIsRightEyeOpenProbability()> EYES_THRESHOLD )
+                closed = false;
+            else {
+                closed = true;
+            }
             return closed;
         }//end EyesClosed
 
-        // Boolean to detect if Head is turned LEFT based on TURNING_LEFT_THRESHOLD
-        boolean HeadTurnedLeft(Detector.Detections<Face> detections, Face face, float threshold) {
+        public boolean HeadTurnedLeft(Detector.Detections<Face> detections, Face face, float threshold) {
             boolean turned;
-            turned = face.getEulerY() > threshold;
+            if (face.getEulerY() > threshold)
+                turned = true;
+            else {
+                turned = false;
+            }
             return turned;
         }//end HeadTurnedLeft
 
-        // Boolean to detect if Head is turned RIGHT based on TURNING_RIGHT_THRESHOLD
-        boolean HeadTurnedRight(Detector.Detections<Face> detections, Face face, float threshold) {
+        public boolean HeadTurnedRight(Detector.Detections<Face> detections, Face face, float threshold) {
             boolean turned;
-            turned = face.getEulerY() < threshold;
+            if (face.getEulerY() < threshold)
+                turned = true;
+            else {
+                turned = false;
+            }
             return turned;
         }//end HeadTurnedRight
 
-        // Called when a face is not detected within the camera view
         @Override
         public void onMissing(Detector.Detections<Face> detections) {
             super.onMissing(detections);
             showStatus("Face Not Detected yet!");
-            if(startWasPressed){
-                isAttentive = false;
-                playAlarm();
-            }
+            // Possibly play alarm here - Still to be determined
         }//end onMissing
 
         @Override
@@ -185,14 +218,13 @@ public class MainActivity extends AppCompatActivity {
 
     private class FaceTrackerFactory implements MultiProcessor.Factory<Face> {
 
-        private FaceTrackerFactory() { /**/ }
+        private FaceTrackerFactory() { /***************/ }
         @Override
         public Tracker<Face> create(Face face) { return new EyesTracker(); }//end create
 
     }//end class FaceTrackerFactory
 
-    // Linked to closeButton press - Does exactly what you think it does
-    private void closeApplication(){
+    private void closeApplication(){ // Linked to button press - Does exactly what you think it does
         finish();
         moveTaskToBack(true);
     }//end closeApplication
