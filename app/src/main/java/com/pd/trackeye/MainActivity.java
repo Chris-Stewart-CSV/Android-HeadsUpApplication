@@ -70,12 +70,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }//end onCreate
-    
+
     // Used to play ping on button press
     public void playPing() {
         mpT.start();
     } //end playPing
-    
+
     // Used to play alarm when driver not paying attention
     public void playAlarm() {
         mp.start();
@@ -103,11 +103,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onUpdate(Detector.Detections<Face> detections, Face face) {
             long time = System.nanoTime();
-            long nanosPerSecond = 1000000;
+            long nanosPerSecond = 1000000;  // Number of nanoseconds per second
             float delta_time = (time - last_time) / nanosPerSecond;
             last_time = time;
-
-            System.out.println("delta time: " + delta_time);
 
             if (isAttentive) {
                 inattentiveTime = 0;
@@ -148,29 +146,36 @@ public class MainActivity extends AppCompatActivity {
             }//end if startWasPressed
         }//end onUpdate
 
+        // Boolean to detect if Eyes are open/closed based on EYES_THRESHOLD
         boolean EyesClosed(Detector.Detections<Face> detections, Face face, float threshold){
             boolean closed;
             closed = !(face.getIsLeftEyeOpenProbability() > EYES_THRESHOLD) || !(face.getIsRightEyeOpenProbability() > EYES_THRESHOLD);
             return closed;
         }//end EyesClosed
 
+        // Boolean to detect if Head is turned LEFT based on TURNING_LEFT_THRESHOLD
         boolean HeadTurnedLeft(Detector.Detections<Face> detections, Face face, float threshold) {
             boolean turned;
             turned = face.getEulerY() > threshold;
             return turned;
         }//end HeadTurnedLeft
 
+        // Boolean to detect if Head is turned RIGHT based on TURNING_RIGHT_THRESHOLD
         boolean HeadTurnedRight(Detector.Detections<Face> detections, Face face, float threshold) {
             boolean turned;
             turned = face.getEulerY() < threshold;
             return turned;
         }//end HeadTurnedRight
 
+        // Called when a face is not detected within the camera view
         @Override
         public void onMissing(Detector.Detections<Face> detections) {
             super.onMissing(detections);
             showStatus("Face Not Detected yet!");
-            // Possibly play alarm here - Still to be determined
+            if(startWasPressed){
+                isAttentive = false;
+                playAlarm();
+            }
         }//end onMissing
 
         @Override
