@@ -22,6 +22,7 @@ Presently Heads Up will notify a driver if they are sleepy, eyes are closed, fac
 ** Note to developers
 - To access main code on GitHub follow path: app/src/main/java/cpm/pd/trackeye/MainActivity.java
 - To access main code once downloaded follow path: app/java/com.pd.trackeye/MainActivity.java
+- To enable orange text on screen press Heads Up logo afer pressing start (there is an invisible button on the logo)
 </p>
 <p align="left">
 
