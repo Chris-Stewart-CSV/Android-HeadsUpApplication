@@ -27,6 +27,4 @@ public class ExampleUnitTest {
         ma.playAlarm();
     }
 
-
-
-}
+}//end ExampleUnitTest
