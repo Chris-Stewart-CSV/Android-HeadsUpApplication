@@ -2,11 +2,11 @@
 ![API](https://img.shields.io/badge/API-15%2B-brightgreen.svg?style=flat)
 
 <p align="center">
-	A driver awareness application utilizing eye tracking and facial recognition.
+	## A driver awareness application utilizing eye tracking and facial recognition.
 </p>
 
 <p align="center">
-	Made Using Google Vision API, Android Studio, and Java.
+	## Made Using Google Vision API, Android Studio, and Java.
 </p>
 
 <p align="center">
